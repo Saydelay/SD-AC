@@ -1,28 +1,35 @@
-from flask import Flask, request, jsonify
-import json
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cheat-Scan Ergebnis anzeigen</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <h2>🔎 Scan-Code eingeben:</h2>
+  <input type="text" id="codeInput" placeholder="z.B. 7X4G9QW1" />
+  <button onclick="fetchGist()">Daten abrufen</button>
 
-app = Flask(__name__)
-CODES_DATEI = 'codes.json'
+  <pre id="resultDisplay"></pre>
 
-@app.route('/api/codes', methods=['POST'])
-def codes_hinzufuegen():
-    data = request.json
-    neuer_code = data.get('code', '').strip().lower()
-    if not neuer_code:
-        return jsonify({"error": "Kein Code übermittelt"}), 400
+  <script>
+    async function fetchGist() {
+      const code = document.getElementById("codeInput").value.trim();
+      const response = await fetch("https://api.github.com/gists");
+      const gists = await response.json();
 
-    try:
-        with open(CODES_DATEI, 'r') as f:
-            codes = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        codes = []
+      const match = gists.find(g => g.description && g.description.includes(code));
+      if (!match) {
+        document.getElementById("resultDisplay").textContent = "❌ Kein Scan mit diesem Code gefunden.";
+        return;
+      }
 
-    if neuer_code not in codes:
-        codes.append(neuer_code)
-        with open(CODES_DATEI, 'w') as f:
-            json.dump(codes, f)
+      const fileKey = Object.keys(match.files)[0];
+      const fileUrl = match.files[fileKey].raw_url;
+      const fileResponse = await fetch(fileUrl);
+      const content = await fileResponse.text();
 
-    return jsonify({"message": "Code gespeichert", "code": neuer_code})
-
-if __name__ == '__main__':
-    app.run(port=5000)
+      document.getElementById("resultDisplay").textContent = content;
+    }
+  </script>
+</body>
+</html>

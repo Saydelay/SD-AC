@@ -1,72 +1,22 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>CheatScan Codeprüfung</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #1e1e1e;
-      color: white;
-      text-align: center;
-      padding: 50px;
-    }
-    input, button {
-      font-size: 18px;
-      padding: 10px;
-      margin: 10px;
-      border-radius: 8px;
-      border: none;
-    }
-    input {
-      width: 250px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-    }
-    #ergebnis {
-      margin-top: 20px;
-      font-size: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h1>🔍 CheatScan</h1>
-  <p>Gib deinen Scan-Code ein:</p>
+async function pruefeCode() {
+  const eingabe = document.getElementById("codeInput").value.trim().toLowerCase();
+  const ergebnis = document.getElementById("ergebnis");
 
-  <input type="text" id="codeInput" placeholder="z.B. A1B2C3D4" />
-  <br>
-  <button onclick="prüfeCode()">Code prüfen</button>
+  if (!eingabe) {
+    ergebnis.innerHTML = "❗ Bitte gib einen Code ein.";
+    return;
+  }
 
-  <div id="ergebnis"></div>
+  try {
+    const response = await fetch('codes.json');
+    const codes = await response.json();
 
-  <script>
-    // Beispielhafte Liste auffälliger Codes – hier kannst du echte einfügen
-    const auffälligeCodes = [
-      "abc123",
-      "deadbeef",
-      "gefunden2025",
-      "fivemhack",
-      "cheatdetected"
-    ];
-
-    function prüfeCode() {
-      const eingabe = document.getElementById("codeInput").value.trim().toLowerCase();
-      const ergebnis = document.getElementById("ergebnis");
-
-      if (!eingabe) {
-        ergebnis.innerHTML = "❗ Bitte gib einen Code ein.";
-        return;
-      }
-
-      if (auffälligeCodes.includes(eingabe)) {
-        ergebnis.innerHTML = "⚠️ Verdächtiger Code gefunden!";
-      } else {
-        ergebnis.innerHTML = "✅ Kein bekannter Cheat-Code.";
-      }
+    if (codes.includes(eingabe)) {
+      ergebnis.innerHTML = "⚠️ Verdächtiger Code gefunden!";
+    } else {
+      ergebnis.innerHTML = "✅ Kein bekannter Cheat-Code.";
     }
-  </script>
-</body>
-</html>
+  } catch {
+    ergebnis.innerHTML = "❗ Fehler beim Laden der Codes.";
+  }
+}

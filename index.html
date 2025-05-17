@@ -1,22 +1,28 @@
-async function pruefeCode() {
-  const eingabe = document.getElementById("codeInput").value.trim().toLowerCase();
-  const ergebnis = document.getElementById("ergebnis");
+from flask import Flask, request, jsonify
+import json
 
-  if (!eingabe) {
-    ergebnis.innerHTML = "❗ Bitte gib einen Code ein.";
-    return;
-  }
+app = Flask(__name__)
+CODES_DATEI = 'codes.json'
 
-  try {
-    const response = await fetch('codes.json');
-    const codes = await response.json();
+@app.route('/api/codes', methods=['POST'])
+def codes_hinzufuegen():
+    data = request.json
+    neuer_code = data.get('code', '').strip().lower()
+    if not neuer_code:
+        return jsonify({"error": "Kein Code übermittelt"}), 400
 
-    if (codes.includes(eingabe)) {
-      ergebnis.innerHTML = "⚠️ Verdächtiger Code gefunden!";
-    } else {
-      ergebnis.innerHTML = "✅ Kein bekannter Cheat-Code.";
-    }
-  } catch {
-    ergebnis.innerHTML = "❗ Fehler beim Laden der Codes.";
-  }
-}
+    try:
+        with open(CODES_DATEI, 'r') as f:
+            codes = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        codes = []
+
+    if neuer_code not in codes:
+        codes.append(neuer_code)
+        with open(CODES_DATEI, 'w') as f:
+            json.dump(codes, f)
+
+    return jsonify({"message": "Code gespeichert", "code": neuer_code})
+
+if __name__ == '__main__':
+    app.run(port=5000)

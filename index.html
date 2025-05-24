@@ -1,35 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Cheat-Scan Ergebnis anzeigen</title>
-  <meta charset="UTF-8">
-</head>
-<body>
-  <h2>🔎 Scan-Code eingeben:</h2>
-  <input type="text" id="codeInput" placeholder="z.B. 7X4G9QW1" />
-  <button onclick="fetchGist()">Daten abrufen</button>
+from flask import Flask, request, jsonify
 
-  <pre id="resultDisplay"></pre>
+app = Flask(__name__)
 
-  <script>
-    async function fetchGist() {
-      const code = document.getElementById("codeInput").value.trim();
-      const response = await fetch("https://api.github.com/gists");
-      const gists = await response.json();
+# Speicher für eingehende Ergebnisse
+scan_results = []
 
-      const match = gists.find(g => g.description && g.description.includes(code));
-      if (!match) {
-        document.getElementById("resultDisplay").textContent = "❌ Kein Scan mit diesem Code gefunden.";
-        return;
-      }
+@app.route('/api/upload', methods=['POST'])
+def upload():
+    data = request.json
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Keine Daten erhalten'}), 400
 
-      const fileKey = Object.keys(match.files)[0];
-      const fileUrl = match.files[fileKey].raw_url;
-      const fileResponse = await fetch(fileUrl);
-      const content = await fileResponse.text();
+    scan_results.append(data)
+    print(f"Neuer Scan: {data}")
+    return jsonify({'status': 'ok', 'message': 'Scan gespeichert'}), 200
 
-      document.getElementById("resultDisplay").textContent = content;
-    }
-  </script>
-</body>
-</html>
+@app.route('/admin/results', methods=['GET'])
+def show_results():
+    return jsonify(scan_results), 200
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

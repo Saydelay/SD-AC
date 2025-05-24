@@ -1,23 +1,87 @@
-from flask import Flask, request, jsonify
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Cheater Scan Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+        .status-alert {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cheater Scan Dashboard</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Gefundene Cheats</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+        </tbody>
+    </table>
 
-app = Flask(__name__)
+    <script>
+        async function fetchResults() {
+            const response = await fetch('/admin/results');
+            const data = await response.json();
 
-# Speicher für eingehende Ergebnisse
-scan_results = []
+            const tbody = document.getElementById('results-body');
+            tbody.innerHTML = '';
 
-@app.route('/api/upload', methods=['POST'])
-def upload():
-    data = request.json
-    if not data:
-        return jsonify({'status': 'error', 'message': 'Keine Daten erhalten'}), 400
+            data.forEach((scan, index) => {
+                const cheats = scan.gefundene_cheats;
+                const status = cheats.length === 0 ? 'OK' : 'ALERT';
+                const row = document.createElement('tr');
 
-    scan_results.append(data)
-    print(f"Neuer Scan: {data}")
-    return jsonify({'status': 'ok', 'message': 'Scan gespeichert'}), 200
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${cheats.length > 0 ? cheats.join(', ') : 'Keine gefunden'}</td>
+                    <td class="${status === 'OK' ? 'status-ok' : 'status-alert'}">${status}</td>
+                `;
 
-@app.route('/admin/results', methods=['GET'])
-def show_results():
-    return jsonify(scan_results), 200
+                tbody.appendChild(row);
+            });
+        }
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+        // Beim Laden sofort Ergebnisse holen
+        fetchResults();
+        // Alle 30 Sekunden neu laden
+        setInterval(fetchResults, 30000);
+    </script>
+</body>
+</html>

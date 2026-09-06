@@ -1,0 +1,5 @@
+{
+"name":"MiniMusic","short_name":"MiniMusic","start_url":"./","scope":"./","display":"standalone","orientation":"portrait",
+"background_color":"#0a0a0c","theme_color":"#0a0a0c",
+"description":"Private offline music library"
+}
